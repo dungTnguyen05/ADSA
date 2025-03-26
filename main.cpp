@@ -65,17 +65,24 @@ std::string sub(std::string I1, std::string I2, int base) {
     return res;
 }
 
-std::string multiply_one_bit(char l1, char l2, int b) {
-    if(l1 == '0' || l2 == '0') return "0";
-    std::string fc = std::to_string(int((l1 - '0') * (l2 - '0') / b));
-    std::string sc = std::to_string(((l1 - '0') * (l2 - '0')) % b);
-    if(fc == "0") fc = "";
-    return fc+sc;
+std::string mult_one_bit(char L1, char L2, int base) {
+    if(L1 == '0' || L2 == '0') {
+        return "0";
+    }
+
+    std::string fc = std::to_string((L1 - '0') * (L2 - '0')/base);
+    std::string sc = std::to_string(((L1 - '0') * (L2 - '0')) % base);
+    
+    if(fc == "0") {
+        fc = "";
+    }
+
+    return fc + sc;
 }
 
 std::string karatsuba(std::string I1, std::string I2, int base) {
     if (I1.length() == 1 && I2.length() == 1) {
-        return multiply_one_bit(I1[0], I2[0], base);
+        return mult_one_bit(I1[0], I2[0], base);
     }
 
     if (I1.length() < I2.length()) {
