@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_set>
 #include <sstream>
 
 struct Node {
@@ -18,6 +19,7 @@ struct Node {
 class AVLTree {
     public:
         Node* root;
+        std::unordered_set<int> st;
 
         AVLTree() {
             this -> root = nullptr;
@@ -41,6 +43,14 @@ class AVLTree {
             }
         }
 
+        void update_node(Node* node) {
+            if (!node) {
+                return;
+            }
+
+            node -> height = std::max(get_height(node -> left), get_height(node -> right)) + 1;
+        }
+
         Node* left_rotate(Node* node) {
             Node* node_right = node -> right;
             Node* node_right_left = node_right -> left;
@@ -48,8 +58,8 @@ class AVLTree {
             node_right -> left = node;
             node -> right = node_right_left;
 
-            node -> height = std::max(get_height(node -> left), get_height(node -> right)) + 1;
-            node_right -> height = std::max(get_height(node_right -> left), get_height(node_right -> right)) + 1;
+            update_node(node);
+            update_node(node_right);
 
             return node_right;
         }
@@ -61,8 +71,8 @@ class AVLTree {
             node_left -> right = node;
             node -> left = node_left_right;
 
-            node -> height = std::max(get_height(node -> left), get_height(node -> right)) + 1;
-            node_left -> height = std::max(get_height(node_left -> left), get_height(node_left -> right)) + 1;
+            update_node(node);
+            update_node(node_left);
 
             return node_left;
         }
@@ -70,7 +80,7 @@ class AVLTree {
         Node* max_value_node(Node* node) {
             Node* curr = node;
 
-            while (curr -> right) {
+            while (curr && curr -> right) {
                 curr = curr -> right;
             }
 
@@ -78,7 +88,12 @@ class AVLTree {
         }
 
         Node* insert_node(Node* node, int val) {
+            if (st.find(val) != st.end()) {
+                return node;
+            }
+
             if (!node) {
+                st.insert(val);
                 return new Node(val);
             }
 
@@ -90,12 +105,7 @@ class AVLTree {
                 node -> right = insert_node(node -> right, val);
             }
 
-            // duplicate
-            else {
-                return node;
-            }
-
-            node -> height = std::max(get_height(node->left), get_height(node->right)) + 1;
+            update_node(node);
             int balance = get_balance(node);
 
             // left-left
@@ -110,11 +120,13 @@ class AVLTree {
 
             // left-right
             if (balance > 1 && val > node -> left -> val) {
+                node -> left = left_rotate(node -> left);
                 return right_rotate(node);
             }
 
             // right-left
             if (balance < -1 && val < node -> right -> val) {
+                node -> right = right_rotate(node -> right);
                 return left_rotate(node);
             }
 
@@ -135,33 +147,20 @@ class AVLTree {
             }
 
             else {
+                st.erase(val);
+
                 if (!(node -> left) || !(node -> right)) {
                     Node* temp = (node -> left) ? (node -> left) : (node -> right);
-
-                    if (!temp) {
-                        temp = node;
-                        node = nullptr;
-                    }
-
-                    else {
-                        *node = *temp; // copy content of temp to node
-                    }
-
-                    delete temp;
+                    delete node;
+                    return temp;
                 }
 
-                else {
-                    Node* temp = max_value_node(node -> right);
-                    node -> val = temp -> val;
-                    node -> right = delete_node(node -> right, temp -> val);
-                }
+                Node* temp = max_value_node(node -> left);
+                node -> val = temp -> val;
+                node -> left = delete_node(node -> left, temp -> val);
             }
 
-            if (!node) {
-                return node;
-            }
-
-            node->height = 1 + std::max(get_height(node -> left), get_height(node -> right));
+            update_node(node);
             int balance = get_balance(node);
 
             // left-left
@@ -190,27 +189,33 @@ class AVLTree {
         }
 
         void pre_order(Node* node) {
-            if (node) {
-                std::cout << node -> val << " ";
-                pre_order(node -> left);
-                pre_order(node -> right);
+            if (!node) {
+                return;
             }
+
+            std::cout << node -> val << " ";
+            pre_order(node -> left);
+            pre_order(node -> right);
         }
 
         void post_order(Node* node) {
-            if (node) {
-                post_order(node -> left);
-                post_order(node -> right);
-                std::cout << node -> val << " "; 
+            if (!node) {
+                return;
             }
+
+            post_order(node -> left);
+            post_order(node -> right);
+            std::cout << node -> val << " "; 
         }
 
         void in_order(Node* node) {
-            if (node) {
-                in_order(node -> left);
-                std::cout << node -> val << " ";
-                in_order(node -> right);
+            if (!node) {
+                return;
             }
+
+            in_order(node -> left);
+            std::cout << node -> val << " ";
+            in_order(node -> right);
         }
 };
 
